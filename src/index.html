@@ -1,17 +1,231 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
+    <head>
+        <title>Aztecross - Destiny 2 News Scraper</title>
+        <style type="text/css">
+            body {
+                background-color: #333;
+                color: #eee;
+                font-family: arial;
+                font-size: 0.9em;
+            }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <title>Vanilla JavaScript App</title>
-</head>
+            a {
+                color: cyan;
+                text-decoration: none;                
+            }
 
-<body>
-  <main>
-    <h1>Vanilla JavaScript App</h1>
-  </main>
-</body>
+            a:hover {
+                text-decoration: underline;
+            }
 
+            #content-wrapper {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-top: 100px;
+            }
+
+            #content {
+                margin: 0px auto;                
+                border: solid 1px #666;
+                border-radius: 10px;
+                padding: 5px;
+                background-color: #222;
+                display: none;
+            }
+
+            .content-header {
+                margin-bottom: 10px;
+
+            }
+
+            .news-row {
+                display: flex;
+                flex-direction: row;
+                font-size: 1.1em;
+                padding: 10px 0px;
+                border-bottom: solid 1px #666;
+            }
+
+            .news-row:last-child {
+                border-bottom: none;
+            }
+
+            .row-date {
+                width: 75px;
+                text-align: right;
+                padding-right: 15px;
+                font-size: 0.9em;
+            }
+
+            .row-link {
+                width: 500px;
+                padding-right: 15px;
+
+            }
+
+            .row-age {
+                width: 100px;
+                text-align: right;
+                padding-right: 15px;
+                font-size: 0.9em;
+            }
+
+            #btnStart {
+                border-radius: 10px;
+                font-size: 1.0em;
+                font-weight: bold;
+                border: solid 1px #666;
+                padding: 15px 20px;
+                text-align: center;
+            }
+
+            #btnStart:hover {
+                cursor: pointer;
+                background-color: darkblue;
+            }
+        </style>
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>        
+    </head>
+    <body>
+        <div id="content-wrapper">
+            <div class="content-header">
+                Bungie News
+            </div>
+            <div id="content">
+            </div>
+
+            <div id="btnStart"><span style='font-size: 1.1em;'>Start Fetching News</span> <br /><br /><span style='font-weight: normal;'>You have to click this for an audio alert to play</span></div>
+        </div>
+
+        <script type="text/javascript">
+            $(document).ready(function () {
+                $( "#btnStart" ).on( "click", function() {
+                    refreshNews();
+                } );
+            });
+
+            var newsEntries = {};
+
+            var refreshNewsTimer = null;
+            function refreshNews() {
+                clearTimeout(refreshNewsTimer);
+                refreshNewsTimer = setTimeout(refreshNewsInternal, 50);
+
+                $('#content').show();
+                $('#btnStart').hide();
+            };
+
+            function refreshNewsInternal() {
+                var bungieNewsUrl = 'https://cdn.contentstack.io/v3/content_types/news_article/entries/?only[BASE][]=date&only[BASE][]=title&only[BASE][]=url&locale=en-us&desc=date&include_count=true&skip=0&limit=5&environment=live';
+                var bungieApiKey = 'blte410e3b15535c144';
+                var bungieAccessToken = 'cs7929311353379d90697fc0b6';
+
+                $.ajax({
+                    beforeSend: function (request) {
+                        request.setRequestHeader("Api_key", bungieApiKey);
+                        request.setRequestHeader("Access_token", bungieAccessToken);
+                    },
+                    dataType: "json",
+                    url: bungieNewsUrl,
+                    success: function (data) {
+                        if (data.entries) {    
+                            
+                            var didFindNewArticle = false;
+
+                            //Loop through each news story and see if we have anything new
+                            $.each(data.entries, function (_, entry) {
+                                
+                                var alreadyExists = entry.uid in newsEntries;
+                                //We have a new news article
+                                if(alreadyExists)
+                                    return;
+                                
+                                entry.firstSeen = Date.now();
+                                newsEntries[entry.uid] = entry;
+
+                                didFindNewArticle = true;
+                            });
+                            
+                            if(didFindNewArticle) {
+                                //Play a sound
+                                var audio = new Audio('notification-alert.mp3');
+                                audio.play();
+                            }
+
+                            //Update the UI
+                            var $content = $('#content');
+                            $content.html('');
+
+                            $.each(newsEntries, function (_, entry) {
+                               
+                                var $row = $('<div>', { class: 'news-row'});
+                                var $rowDate = $('<div>', { class: 'row-date'});
+                                $rowDate.html(serverDateAsLocalTimestamp(entry.date));
+
+                                var $rowLink = $('<div>', { class: 'row-link'});                                
+                                var rowHtml = "<a href='https://www.bungie.net/7/en/News/article" + entry.url.hosted_url + "' target='_new'>" + entry.title + "</a>";
+                                $rowLink.html(rowHtml);
+
+                                var $rowAge = $('<div>', { class: 'row-age'});
+                                $rowAge.html(timeSince(entry.firstSeen));
+
+                                $row.append($rowDate).append($rowLink).append($rowAge);                                       
+                                $content.append($row);
+                            });
+
+                        }
+                    }
+                });
+
+                //Update the leads / queue count again in 1 minute
+                refreshNewsTimer = setTimeout(refreshNewsInternal, 1 * 60 * 1000);
+            };
+
+            function serverDateAsLocalTimestamp(input) {
+                if (!input.endsWith('Z'))
+                    input += 'Z';
+
+                var dateTime = new Date(input);
+
+                return dateTime.toLocaleDateString(['en-US'], { day: 'numeric', month: 'numeric', year: '2-digit' });
+            }
+
+            function timeSince(date) {
+                var seconds = Math.floor((new Date() - date) / 1000);
+
+                var interval = seconds / 31536000;
+
+                if (interval > 1) {
+                    return Math.floor(interval) + " years";
+                }
+
+                interval = seconds / 2592000;
+                if (interval > 1) {
+                    return Math.floor(interval) + " months";
+                }
+
+                interval = seconds / 86400;
+                if (interval > 1) {
+                    return Math.floor(interval) + " days";
+                }
+
+                interval = seconds / 3600;
+                if (interval > 1) {
+                    return Math.floor(interval) + " hours";
+                }
+
+                interval = seconds / 60;
+                if (interval > 1) {
+                    return Math.floor(interval) + " minutes";
+                }
+
+                if(seconds == 0)
+                    return "now";
+
+                return Math.floor(seconds) + " seconds";
+
+            }
+        </script>
+    </body>
 </html>
