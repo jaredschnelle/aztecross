@@ -1,132 +1,132 @@
 <html>
-    <head>
-        <title>Aztecross - Destiny 2 News Scraper</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
-        <style type="text/css">
-            body {
-                background-color: #333;
-                color: #eee;
-                font-family: 'Lato', sans-serif;
-                font-size: 0.9em;
-                background: url(background.jpg);
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-            }
+<head>
+    <title>Aztecross - Destiny 2 News Scraper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#000000" />
+    <style type="text/css">
+        body {
+            background-color: #333;
+            color: #eee;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.9em;
+            background: url(background.jpg);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
 
-            a {
-                color: cyan;
-                text-decoration: none;                
-            }
+        a {
+            color: cyan;
+            text-decoration: none;
+        }
 
             a:hover {
                 text-decoration: underline;
             }
 
-            #content-wrapper {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                width: 734px;
-                margin: 0px auto;                
-                margin-top: 100px;
-            }
+        #content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 734px;
+            margin: 0px auto;
+            margin-top: 100px;
+        }
 
-            #content {
-                margin: 0px auto;                
-                border: solid 2px #000;
-                border-radius: 10px;
-                background-color: #222;
-                display: none;
-            }
+        #content {
+            margin: 0px auto;
+            border: solid 2px #000;
+            border-radius: 10px;
+            background-color: #222;
+            display: none;
+        }
 
-            .content-header {
-                margin-bottom: 10px;
+        .content-header {
+            margin-bottom: 10px;
+        }
 
-            }
-
-            .news-row {
-                display: flex;
-                flex-direction: row;
-                font-size: 1.1em;
-                padding: 10px 5px;
-                border-bottom: solid 1px #000;
-            }
+        .news-row {
+            display: flex;
+            flex-direction: row;
+            font-size: 1.1em;
+            padding: 10px 5px;
+            border-bottom: solid 1px #000;
+        }
 
             .news-row:last-child {
                 border-bottom: none;
             }
 
-            .row-date {
-                width: 75px;
-                text-align: right;
-                padding-right: 15px;
-                font-size: 0.9em;
-            }
+        .row-date {
+            width: 75px;
+            text-align: right;
+            padding-right: 15px;
+            font-size: 0.9em;
+        }
 
-            .row-link {
-                width: 500px;
-                padding-right: 15px;
+        .row-link {
+            width: 500px;
+            padding-right: 15px;
+        }
 
-            }
+        .row-age {
+            width: 100px;
+            text-align: right;
+            padding-right: 15px;
+            font-size: 0.9em;
+        }
 
-            .row-age {
-                width: 100px;
-                text-align: right;
-                padding-right: 15px;
-                font-size: 0.9em;
-            }
-
-            #btnStart {
-                border-radius: 10px;
-                font-size: 1.0em;
-                font-weight: bold;
-                border: solid 1px #666;
-                padding: 15px 20px;
-                text-align: center;
-                background-color: #31fb09;
-                color: #000;
-            }
+        #btnStart {
+            border-radius: 10px;
+            font-size: 1.0em;
+            font-weight: bold;
+            border: solid 1px #666;
+            padding: 15px 20px;
+            text-align: center;
+            background-color: #31fb09;
+            color: #000;
+        }
 
             #btnStart:hover {
                 cursor: pointer;
                 background-color: #75ff5a;
             }
 
-            .progress-wrapper {
-                width: 100%;
-                margin-top: 10px;
-            }
+        .progress-wrapper {
+            width: 100%;
+            margin-top: 10px;
+        }
 
-            .progress-bar {
-                width: 100%;
-                display: none;
-                border: solid 1px #000;
+        .progress-bar {
+            width: 100%;
+            display: none;
+            border: solid 1px #000;
+            border-radius: 5px;
+            background-color: #000;
+        }
+
+            .progress-bar .foreground {
+                background: linear-gradient(90deg, rgba(34,193,195,1) 0%, rgba(253,187,45,1) 100%);
                 border-radius: 5px;
-                background-color: #000;
+                width: 0%;
+                height: 5px;
+                transition: width 1.0s;
+                transition-timing-function: linear;
             }
-                .progress-bar .foreground {
-                    background: linear-gradient(90deg, rgba(34,193,195,1) 0%, rgba(253,187,45,1) 100%);
-                    border-radius: 5px;
-                    width: 0%;
-                    height: 5px;
-                    transition: width 1.0s;
-                    transition-timing-function: linear;
-                }
 
-            .progress-text {
-                color: #fff;
-                text-align: right;
-                font-size: 0.9em;
-                margin-top: 5px;
-                margin-right: 5px;
-                color: #999;
-            }
-        </style>
-        <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>        
-    </head>
+        .progress-text {
+            color: #fff;
+            text-align: right;
+            font-size: 0.9em;
+            margin-top: 5px;
+            margin-right: 5px;
+            color: #999;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+</head>
     <body>
         <div id="content-wrapper">
             <div class="content-header">
