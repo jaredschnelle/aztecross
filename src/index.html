@@ -1,12 +1,19 @@
 <html>
     <head>
         <title>Aztecross - Destiny 2 News Scraper</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
         <style type="text/css">
             body {
                 background-color: #333;
                 color: #eee;
-                font-family: arial;
+                font-family: 'Lato', sans-serif;
                 font-size: 0.9em;
+                background: url(background.jpg);
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
             }
 
             a {
@@ -22,14 +29,15 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                width: 734px;
+                margin: 0px auto;                
                 margin-top: 100px;
             }
 
             #content {
                 margin: 0px auto;                
-                border: solid 1px #666;
+                border: solid 2px #000;
                 border-radius: 10px;
-                padding: 5px;
                 background-color: #222;
                 display: none;
             }
@@ -43,8 +51,8 @@
                 display: flex;
                 flex-direction: row;
                 font-size: 1.1em;
-                padding: 10px 0px;
-                border-bottom: solid 1px #666;
+                padding: 10px 5px;
+                border-bottom: solid 1px #000;
             }
 
             .news-row:last-child {
@@ -78,11 +86,43 @@
                 border: solid 1px #666;
                 padding: 15px 20px;
                 text-align: center;
+                background-color: #31fb09;
+                color: #000;
             }
 
             #btnStart:hover {
                 cursor: pointer;
-                background-color: darkblue;
+                background-color: #75ff5a;
+            }
+
+            .progress-wrapper {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .progress-bar {
+                width: 100%;
+                display: none;
+                border: solid 1px #000;
+                border-radius: 5px;
+                background-color: #000;
+            }
+                .progress-bar .foreground {
+                    background: linear-gradient(90deg, rgba(34,193,195,1) 0%, rgba(253,187,45,1) 100%);
+                    border-radius: 5px;
+                    width: 0%;
+                    height: 5px;
+                    transition: width 1.0s;
+                    transition-timing-function: linear;
+                }
+
+            .progress-text {
+                color: #fff;
+                text-align: right;
+                font-size: 0.9em;
+                margin-top: 5px;
+                margin-right: 5px;
+                color: #999;
             }
         </style>
         <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>        
@@ -93,28 +133,102 @@
                 Bungie News
             </div>
             <div id="content">
+                <div class="table">
+                    <div class="table-header news-row" style="text-transform: uppercase;font-size: 0.9em;font-weight: bold;background-color: #0e3d1c;border-radius: 10px 10px 0px 0px;">
+                        <div class="row-date">Published</div>
+                        <div class="row-link">Link</div>
+                        <div class="row-age">Fetched</div>
+                    </div>
+                    <div class="table-body">
+                    </div>
+                </div>
+            </div>
+            <div class="progress-wrapper">
+                <div class="progress-bar">                                        
+                    <div class="foreground"></div>
+                </div>
+                <div class="progress-text">
+
+                </div>
             </div>
 
-            <div id="btnStart"><span style='font-size: 1.1em;'>Start Fetching News</span> <br /><br /><span style='font-weight: normal;'>You have to click this for an audio alert to play</span></div>
+            <div id="btnStart"><span style='font-size: 2.0em;'>Start Fetching News</span> <br /><br /><span style='font-weight: normal;'>You have to click this for an audio alert to play</span></div>
         </div>
 
         <script type="text/javascript">
+            //Sort Function
+            //https://stackoverflow.com/questions/10123953/how-to-sort-an-object-array-by-date-property
+            (function(){
+            if (typeof Object.defineProperty === 'function'){
+                try{Object.defineProperty(Array.prototype,'sortBy',{value:sb}); }catch(e){}
+            }
+            if (!Array.prototype.sortBy) Array.prototype.sortBy = sb;
+
+            function sb(f){
+                for (var i=this.length;i;){
+                var o = this[--i];
+                this[i] = [].concat(f.call(o,o,i),o);
+                }
+                this.sort(function(a,b){
+                for (var i=0,len=a.length;i<len;++i){
+                    if (a[i]!=b[i]) return a[i]<b[i]?-1:1;
+                }
+                return 0;
+                });
+                for (var i=this.length;i;){
+                this[--i]=this[i][this[i].length-1];
+                }
+                return this;
+            }
+            })();
+
             $(document).ready(function () {
                 $( "#btnStart" ).on( "click", function() {
-                    refreshNews();
+                    $('#content').show();
+                    $('.progress-bar').show();
+                    $('#btnStart').hide();
+
+                    refreshNewsInternal();
                 } );
             });
 
             var newsEntries = {};
 
-            var refreshNewsTimer = null;
-            function refreshNews() {
-                clearTimeout(refreshNewsTimer);
-                refreshNewsTimer = setTimeout(refreshNewsInternal, 50);
+            var progressTimer = null;
+            var progressPct = 0.0;
+            var currentTick = 0;
+            var maxTicks = 60;
 
-                $('#content').show();
-                $('#btnStart').hide();
+            function restartProgress() {
+                clearTimeout(progressTimer);
+                progressPct = 0.0;
+                currentTick = 0;
+
+                updateProgressInternal();
             };
+
+            function updateProgressInternal() {
+                clearTimeout(progressTimer);
+                progressTimer = setTimeout(updateProgressInternal, 1000);
+
+                currentTick++;
+                progressPct = (1.0 * currentTick) / maxTicks;
+                //console.log(progressPct);
+                if(progressPct > 100)
+                    progressPct = 100.0;
+
+                if(currentTick > maxTicks) {
+                    clearTimeout(progressTimer);
+                    refreshNewsInternal();
+                }
+
+                drawProgress();                
+            }
+
+            function drawProgress() {
+                $('.progress-bar .foreground').css({'width':progressPct*100 + '%'});
+                $('.progress-text').html("Update in " + (maxTicks-currentTick) + ' sec');
+            }
 
             function refreshNewsInternal() {
                 var bungieNewsUrl = 'https://cdn.contentstack.io/v3/content_types/news_article/entries/?only[BASE][]=date&only[BASE][]=title&only[BASE][]=url&locale=en-us&desc=date&include_count=true&skip=0&limit=5&environment=live';
@@ -154,21 +268,25 @@
                             }
 
                             //Update the UI
-                            var $content = $('#content');
+                            var $content = $('#content .table-body');
                             $content.html('');
 
-                            $.each(newsEntries, function (_, entry) {
+                            //Sort by date -- Convert the dictionary into an array before sort
+                            var articles = Object.values(newsEntries);
+                            articles.sortBy(function(o) { return -o.date });
+
+                            $.each(articles, function (_, article) {
                                
                                 var $row = $('<div>', { class: 'news-row'});
                                 var $rowDate = $('<div>', { class: 'row-date'});
-                                $rowDate.html(serverDateAsLocalTimestamp(entry.date));
+                                $rowDate.html(serverDateAsLocalTimestamp(article.date));
 
                                 var $rowLink = $('<div>', { class: 'row-link'});                                
-                                var rowHtml = "<a href='https://www.bungie.net/7/en/News/article" + entry.url.hosted_url + "' target='_new'>" + entry.title + "</a>";
+                                var rowHtml = "<a href='https://www.bungie.net/7/en/News/article" + article.url.hosted_url + "' target='_new'>" + article.title + "</a>";
                                 $rowLink.html(rowHtml);
 
                                 var $rowAge = $('<div>', { class: 'row-age'});
-                                $rowAge.html(timeSince(entry.firstSeen));
+                                $rowAge.html(timeSince(article.firstSeen));
 
                                 $row.append($rowDate).append($rowLink).append($rowAge);                                       
                                 $content.append($row);
@@ -179,7 +297,8 @@
                 });
 
                 //Update the leads / queue count again in 1 minute
-                refreshNewsTimer = setTimeout(refreshNewsInternal, 1 * 60 * 1000);
+                //refreshNewsTimer = setTimeout(refreshNewsInternal, 1 * 60 * 1000);
+                restartProgress();
             };
 
             function serverDateAsLocalTimestamp(input) {
