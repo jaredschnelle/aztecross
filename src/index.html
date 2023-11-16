@@ -133,6 +133,13 @@
             color: #999;
         }
 
+        .notransition {
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+            transition: none !important;
+        }
+
         @media (max-width: 480px) {
             .news-row {
                 font-size: 1.0em;
@@ -245,6 +252,14 @@
                 clearTimeout(progressTimer);
                 progressPct = 0.0;
                 currentTick = 0;
+
+                $progressBar = $('.progress-bar .foreground');
+
+                $progressBar.addClass('notransition'); // Disable transitions
+                $progressBar.css({ 'width': '0%' });
+                $progressBar[0].offsetHeight; // Trigger a reflow, flushing the CSS changes
+                $progressBar.removeClass('notransition'); // Re-enable transitions
+                $progressBar.css({ 'transition-timing-function': 'linear' });
 
                 updateProgressInternal();
             };
