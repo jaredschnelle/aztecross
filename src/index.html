@@ -287,6 +287,8 @@
                 $('.progress-text').html("Update in " + (maxTicks-currentTick) + ' sec');
             }
 
+            var isFirstPlay = true;
+
             function refreshNewsInternal() {
                 var bungieNewsUrl = 'https://cdn.contentstack.io/v3/content_types/news_article/entries/?only[BASE][]=date&only[BASE][]=title&only[BASE][]=url&locale=en-us&desc=date&include_count=true&skip=0&limit=5&environment=live';
                 var bungieApiKey = 'blte410e3b15535c144';
@@ -318,10 +320,15 @@
                                 didFindNewArticle = true;
                             });
                             
-                            if(didFindNewArticle) {
-                                //Play a sound
-                                var audio = new Audio('notification-alert.mp3');
-                                audio.play();
+                            if (didFindNewArticle) {
+                                if (isFirstPlay) {
+                                    isFirstPlay = false;
+                                }
+                                else {
+                                    //Play a sound
+                                    var audio = new Audio('notification-alert.mp3');
+                                    audio.play();
+                                }
                             }
 
                             //Update the UI
