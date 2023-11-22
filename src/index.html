@@ -317,12 +317,11 @@
                                 entry.firstSeen = Date.now();
 
                                 //Remove the timestamp
-                                if (entry.date.indexOf("T") > 0)
-                                    entry.date = entry.date.substring(0, entry.date.indexOf("T"));
+                                if (entry.date.indexOf("T") < 0)
+                                    entry.date = entry.date + "T00:00:00";
 
                                 //Turn into date object
-                                entry.date = Date.parse(entry.date + "T00:00:00");
-
+                                entry.date = Date.parse(entry.date);
 
                                 newsEntries[entry.uid] = entry;
 
