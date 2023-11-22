@@ -321,7 +321,8 @@
                                     entry.date = entry.date.substring(0, entry.date.indexOf("T"));
 
                                 //Turn into date object
-                                entry.date = Date.parse(entry.date);
+                                entry.date = Date.parse(entry.date + "T00:00:00");
+
 
                                 newsEntries[entry.uid] = entry;
 
